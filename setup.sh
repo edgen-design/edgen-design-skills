@@ -12,11 +12,20 @@ else
   git clone https://github.com/edgen-design/edgen-figma-to-code-mcp.git "$HOME/Desktop/edgen-figma-to-code-mcp"
 fi
 
-# 2. Build MCP server
+# 2. Install bun (needed for socket server)
+if ! command -v bun &>/dev/null; then
+  echo "→ Installing bun..."
+  curl -fsSL https://bun.sh/install | bash
+  export PATH="$HOME/.bun/bin:$PATH"
+else
+  echo "✓ bun already installed"
+fi
+
+# 3. Build MCP server
 echo "→ Building MCP server..."
 cd "$HOME/Desktop/edgen-figma-to-code-mcp" && npm install && npm run build
 
-# 3. Clone AI skills
+# 4. Clone AI skills
 if [ -d "$HOME/.agents/skills/edgen-design-skills" ]; then
   echo "✓ Skills already installed, pulling latest..."
   cd "$HOME/.agents/skills/edgen-design-skills" && git pull
@@ -26,11 +35,42 @@ else
   git clone https://github.com/edgen-design/edgen-design-skills.git "$HOME/.agents/skills/edgen-design-skills"
 fi
 
-# 4. Register MCP globally (works in any folder)
+# 5. Auto-start socket server on login (LaunchAgent)
+PLIST="$HOME/Library/LaunchAgents/com.edgen.figma-socket.plist"
+BUN_PATH=$(which bun 2>/dev/null || echo "$HOME/.bun/bin/bun")
+cat > "$PLIST" << PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.edgen.figma-socket</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$BUN_PATH</string>
+    <string>run</string>
+    <string>$HOME/Desktop/edgen-figma-to-code-mcp/src/socket.ts</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/edgen-figma-socket.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/edgen-figma-socket.log</string>
+</dict>
+</plist>
+PLIST_EOF
+launchctl unload "$PLIST" 2>/dev/null || true
+launchctl load "$PLIST"
+echo "✓ Socket server registered as LaunchAgent (auto-starts on login, running now)"
+
+# 6. Register MCP globally (works in any folder)
 echo "→ Registering MCP server globally..."
 claude mcp add --global TalkToFigma node "$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs" 2>/dev/null && echo "✓ TalkToFigma MCP registered globally" || echo "⚠️  claude CLI not found, skip global MCP — add manually to .mcp.json"
 
-# 5. Add to CLAUDE.md
+# 7. Add to CLAUDE.md
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 mkdir -p "$HOME/.claude"
 INCLUDE_LINE="Include: ~/.agents/skills/edgen-design-skills/layer-rename/SKILL.md"
