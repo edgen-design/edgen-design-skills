@@ -26,7 +26,11 @@ else
   git clone https://github.com/edgen-design/edgen-design-skills.git "$HOME/.agents/skills/edgen-design-skills"
 fi
 
-# 4. Add to CLAUDE.md
+# 4. Register MCP globally (works in any folder)
+echo "→ Registering MCP server globally..."
+claude mcp add --global TalkToFigma node "$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs" 2>/dev/null && echo "✓ TalkToFigma MCP registered globally" || echo "⚠️  claude CLI not found, skip global MCP — add manually to .mcp.json"
+
+# 5. Add to CLAUDE.md
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 mkdir -p "$HOME/.claude"
 INCLUDE_LINE="Include: ~/.agents/skills/edgen-design-skills/layer-rename/SKILL.md"
@@ -43,9 +47,3 @@ echo "✅ 完成！最後一步需要手動："
 echo ""
 echo "   Figma → Plugins → Development → Import plugin from manifest"
 echo "   選擇：$HOME/Desktop/edgen-figma-to-code-mcp/src/cursor_mcp_plugin/manifest.json"
-echo ""
-echo "   然後喺 .mcp.json 加入："
-echo '   "TalkToFigma": {'
-echo '     "command": "node",'
-echo "     \"args\": [\"$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs\"]"
-echo '   }'
