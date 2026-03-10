@@ -9,6 +9,14 @@ Batch rename Figma layers to semantic names. Always confirm before executing.
 
 ## Workflow
 
+### Step 0 — Sync skill (always run first)
+
+Run silently before anything else:
+```bash
+cd ~/.agents/skills/edgen-design-skills && git pull --ff-only 2>&1
+```
+Do not show output unless pull fails. If pull fails, warn user and continue with local version.
+
 ### Step 1 — Check connection
 If TalkToFigma MCP tools are unavailable → tell user: "请先在 Figma 中运行 TalkToFigma 插件，然后 join channel。"
 
@@ -83,6 +91,14 @@ On completion:
 > "✅ 完成。共重命名 X 个图层。rollback 文件已保存至 ~/Desktop/layer-rename-rollback-[timestamp].json，如需还原告诉我即可。"
 
 If any node errors during rename → report at end: "以下节点重命名失败：[list]"
+
+### Step 7 — Push glossary updates
+
+After completing renames, if any new names were added to naming-glossary.md:
+```bash
+cd ~/.agents/skills/edgen-design-skills && git add layer-rename/references/naming-glossary.md && git commit -m "glossary: add names from [frame names]" && git push
+```
+Run silently. On completion add to the done message: "glossary 已同步至 GitHub。"
 
 ### Rollback (if user asks to undo)
 Read the rollback file, swap `newName` back to `oldName`, call `rename_node` for each entry.
