@@ -1,6 +1,6 @@
 ---
 name: layer-rename
-description: "Rename Figma layers from auto-generated names (Frame 123, Group 456) to semantic names. Use when user says 'rename layers', 'batch rename', '帮我 rename layer', or similar. Requires TalkToFigma MCP connected. Supports single or multiple frames selected in Figma."
+description: "Rename Figma layers from auto-generated names (Frame 123, Group 456) to semantic names following Edgen naming conventions. Use when user says 'edgen rename layers', 'edgen rename', or similar. Requires TalkToFigma MCP connected. Supports single or multiple frames selected in Figma."
 ---
 
 # Layer Rename
