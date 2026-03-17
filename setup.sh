@@ -70,7 +70,7 @@ echo "✓ Socket server registered as LaunchAgent (auto-starts on login, running
 # 6. Register MCP globally (works in any folder)
 echo "→ Registering TalkToFigma MCP globally..."
 if command -v claude &>/dev/null; then
-  claude mcp add --global TalkToFigma node "$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs"
+  claude mcp add -s user TalkToFigma node "$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs"
   if claude mcp list 2>/dev/null | grep -q "TalkToFigma"; then
     echo "✓ TalkToFigma MCP registered globally"
   else
