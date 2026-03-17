@@ -68,8 +68,23 @@ launchctl load "$PLIST"
 echo "✓ Socket server registered as LaunchAgent (auto-starts on login, running now)"
 
 # 6. Register MCP globally (works in any folder)
-echo "→ Registering MCP server globally..."
-claude mcp add --global TalkToFigma node "$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs" 2>/dev/null && echo "✓ TalkToFigma MCP registered globally" || echo "⚠️  claude CLI not found, skip global MCP — add manually to .mcp.json"
+echo "→ Registering TalkToFigma MCP globally..."
+if command -v claude &>/dev/null; then
+  claude mcp add --global TalkToFigma node "$HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs"
+  if claude mcp list 2>/dev/null | grep -q "TalkToFigma"; then
+    echo "✓ TalkToFigma MCP registered globally"
+  else
+    echo ""
+    echo "⚠️  MCP 自動註冊失敗，請手動執行："
+    echo "   claude mcp add --global TalkToFigma node $HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs"
+    echo ""
+  fi
+else
+  echo ""
+  echo "⚠️  claude CLI 未找到，請手動執行："
+  echo "   claude mcp add --global TalkToFigma node $HOME/Desktop/edgen-figma-to-code-mcp/dist/server.cjs"
+  echo ""
+fi
 
 # 7. Add to CLAUDE.md
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
