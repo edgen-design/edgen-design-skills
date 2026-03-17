@@ -23,7 +23,7 @@ fi
 
 # 3. Build MCP server
 echo "→ Building MCP server..."
-cd "$HOME/Desktop/edgen-figma-to-code-mcp" && npm install && npm run build
+cd "$HOME/Desktop/edgen-figma-to-code-mcp" && bun install && bun run build
 
 # 4. Clone AI skills
 if [ -d "$HOME/.agents/skills/edgen-design-skills" ]; then
@@ -36,6 +36,7 @@ else
 fi
 
 # 5. Auto-start socket server on login (LaunchAgent)
+mkdir -p "$HOME/Library/LaunchAgents"
 PLIST="$HOME/Library/LaunchAgents/com.edgen.figma-socket.plist"
 BUN_PATH=$(which bun 2>/dev/null || echo "$HOME/.bun/bin/bun")
 cat > "$PLIST" << PLIST_EOF
