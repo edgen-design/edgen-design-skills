@@ -64,6 +64,7 @@ Use these standard names for Edgen screens and components. When a layer matches 
 | Quests tab | `Quests` |
 | Portfolio page | `Portfolio` |
 | Stock Detail page | `StockDetail` |
+| Token Ranking page | `TokenRanking` |
 | Onboarding | `Onboarding` |
 | Settings | `Settings` |
 | Profile | `Profile` |
