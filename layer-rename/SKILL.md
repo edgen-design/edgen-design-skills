@@ -80,26 +80,39 @@ Then ask:
 
 If > 3 frames, confirm frame-by-frame instead of all at once.
 
-### Step 6 — Save rollback file, then execute
+### Step 6 — Output rename JSON for plugin (preferred) OR execute via MCP
 
-Before renaming anything, write a rollback file to `~/Desktop/layer-rename-rollback-[timestamp].json`:
+**Preferred: Plugin mode** (saves tokens, faster)
+
+After user confirms, output the rename JSON and tell user to paste into the Figma plugin:
+
+```json
+[
+  { "nodeId": "76080:47414", "newName": "ManageBilling/Layout" },
+  { "nodeId": "76080:47415", "newName": "ManageBilling/Header" }
+]
+```
+
+> "✅ 命名方案已生成。請貼入 Figma Edgen Layer Rename plugin 執行。Plugin 會自動生成 rollback JSON，複製後存到 Desktop 即可。"
+
+The plugin handles: execution, rollback capture, skipping instances/locked nodes.
+
+**Fallback: MCP mode** (only if plugin unavailable)
+
+Execute `rename_node(nodeId, newName)` for each approved rename via MCP. Before starting each frame, write its rollback file to `~/Desktop/layer-rename-rollback-[timestamp].json` immediately — do NOT batch across frames.
 
 ```json
 {
   "date": "2026-03-10T12:00:00",
-  "frames": ["frameName1", "frameName2"],
+  "frames": ["frameName"],
   "renames": [
     { "nodeId": "76080:47414", "oldName": "Frame 2147224927", "newName": "ManageBilling/Layout" }
   ]
 }
 ```
 
-Then execute `rename_node(nodeId, newName)` for each approved rename. Skip locked/instance nodes silently.
-
 On completion:
 > "✅ 完成。共重命名 X 个图层。rollback 文件已保存至 ~/Desktop/layer-rename-rollback-[timestamp].json，如需还原告诉我即可。"
-
-If any node errors during rename → report at end: "以下节点重命名失败：[list]"
 
 ### Step 7 — Push glossary updates
 
