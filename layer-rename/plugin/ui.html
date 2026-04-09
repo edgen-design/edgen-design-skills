@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 13px;
+    background: #1e1e1e;
+    color: #e0e0e0;
+    padding: 16px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  h2 { font-size: 14px; font-weight: 600; color: #fff; }
+  label { font-size: 11px; color: #999; margin-bottom: 4px; display: block; }
+  textarea {
+    width: 100%;
+    flex: 1;
+    background: #2a2a2a;
+    border: 1px solid #3a3a3a;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 11px;
+    padding: 10px;
+    resize: none;
+    outline: none;
+    min-height: 140px;
+  }
+  textarea:focus { border-color: #555; }
+  .row { display: flex; gap: 8px; }
+  button {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  #btn-execute { background: #18a0fb; color: #fff; }
+  #btn-execute:hover { background: #0d8de0; }
+  #btn-execute:disabled { background: #333; color: #666; cursor: default; }
+  #btn-close { background: #333; color: #aaa; }
+  #btn-close:hover { background: #3a3a3a; }
+
+  #status {
+    font-size: 12px;
+    color: #aaa;
+    min-height: 18px;
+  }
+  #status.success { color: #4caf50; }
+  #status.error { color: #f44336; }
+
+  .rollback-section { display: none; flex-direction: column; gap: 6px; }
+  .rollback-section.visible { display: flex; }
+  .rollback-header { display: flex; justify-content: space-between; align-items: center; }
+  #btn-copy {
+    font-size: 11px;
+    padding: 4px 10px;
+    background: #333;
+    color: #ccc;
+    border-radius: 4px;
+    flex: unset;
+  }
+  #btn-copy:hover { background: #444; }
+  #rollback-out {
+    min-height: 80px;
+    max-height: 140px;
+    font-size: 10px;
+    color: #888;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: #666;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<h2>Edgen Layer Rename</h2>
+
+<div style="display:flex;flex-direction:column;gap:4px;flex:1">
+  <label>貼入 Claude 生成嘅 rename JSON：</label>
+  <textarea id="input" placeholder='[
+  { "nodeId": "80223:36308", "newName": "Home/HKMarket" },
+  { "nodeId": "80223:36310", "newName": "Home/ScrollContent" }
+]'></textarea>
+</div>
+
+<div id="status"></div>
+
+<div class="row">
+  <button id="btn-execute">▶ Execute Renames</button>
+  <button id="btn-close">Close</button>
+</div>
+
+<div class="rollback-section" id="rollback-section">
+  <div class="rollback-header">
+    <label style="margin:0">Rollback JSON（複製後存入 Desktop）：</label>
+    <button id="btn-copy" class="row">Copy</button>
+  </div>
+  <textarea id="rollback-out" readonly></textarea>
+</div>
+
+<p class="hint">提示：Figma 支援 Cmd+Z 撤銷，rollback JSON 係額外保險。</p>
+
+<script>
+const inputEl = document.getElementById("input");
+const statusEl = document.getElementById("status");
+const btnExecute = document.getElementById("btn-execute");
+const btnClose = document.getElementById("btn-close");
+const btnCopy = document.getElementById("btn-copy");
+const rollbackSection = document.getElementById("rollback-section");
+const rollbackOut = document.getElementById("rollback-out");
+
+btnExecute.addEventListener("click", () => {
+  let renames;
+  try {
+    const raw = inputEl.value.trim();
+    const parsed = JSON.parse(raw);
+    // Accept either array or {renames: [...]}
+    renames = Array.isArray(parsed) ? parsed : parsed.renames;
+    if (!Array.isArray(renames) || renames.length === 0) throw new Error("Empty array");
+  } catch (e) {
+    statusEl.textContent = "JSON 格式錯誤，請重新貼入。";
+    statusEl.className = "error";
+    return;
+  }
+
+  btnExecute.disabled = true;
+  statusEl.className = "";
+  statusEl.textContent = `執行中… (${renames.length} 個)`;
+
+  parent.postMessage({ pluginMessage: { type: "execute-renames", renames } }, "*");
+});
+
+btnClose.addEventListener("click", () => {
+  parent.postMessage({ pluginMessage: { type: "close" } }, "*");
+});
+
+btnCopy.addEventListener("click", () => {
+  rollbackOut.select();
+  document.execCommand("copy");
+  btnCopy.textContent = "Copied!";
+  setTimeout(() => { btnCopy.textContent = "Copy"; }, 1500);
+});
+
+window.onmessage = (event) => {
+  const msg = event.data.pluginMessage;
+  if (!msg || msg.type !== "done") return;
+
+  btnExecute.disabled = false;
+
+  const { successCount, failCount, rollback } = msg;
+  const skipped = msg.results.filter(r => r.status === "skipped").length;
+
+  if (failCount === 0) {
+    statusEl.textContent = `✅ 完成：${successCount} 個重命名，${skipped} 個跳過`;
+    statusEl.className = "success";
+  } else {
+    statusEl.textContent = `⚠️ 完成：${successCount} 個成功，${failCount} 個失敗，${skipped} 個跳過`;
+    statusEl.className = "error";
+  }
+
+  if (rollback.length > 0) {
+    const rollbackData = {
+      date: new Date().toISOString().slice(0, 19),
+      renames: rollback.map(r => ({
+        nodeId: r.nodeId,
+        oldName: r.oldName,
+        newName: r.newName
+      }))
+    };
+    rollbackOut.value = JSON.stringify(rollbackData, null, 2);
+    rollbackSection.classList.add("visible");
+  }
+};
+</script>
+</body>
+</html>
