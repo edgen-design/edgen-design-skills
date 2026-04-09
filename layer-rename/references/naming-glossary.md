@@ -53,6 +53,10 @@ Use these standard names for Edgen screens and components. When a layer matches 
 
 | Screen | Standard Name |
 |--------|--------------|
+| Home tab (Alpha Picks) — default/US market | `Home/Default` |
+| Home tab — HK market view | `Home/HKMarket` |
+| Home tab — ETF view | `Home/ETF` |
+| Home tab — Crypto market view | `Home/CryptoMarket` |
 | Alpha Picks tab | `AlphaPicks` |
 | App Store / Skills tab | `AppStore` |
 | Community / UGC tab | `Community` |
@@ -85,6 +89,14 @@ Example: `AlphaPicks/Loading`, `Card/Locked`, `Modal/Error`
 | Component | Standard Name |
 |-----------|--------------|
 | Alpha Pick card | `AlphaCard` |
+| Stock card (Home tab picks list) | `StockCard/Default` |
+| Stock card outer wrapper | `StockCard/Body` |
+| Stock card inner content area | `StockCard/Content` |
+| Stock card info row (ticker + name) | `StockCard/InfoRow` |
+| Stock card price row | `StockCard/PriceRow` |
+| Stock card return/gain badge | `StockCard/ReturnBadge` |
+| Stock card bottom row | `StockCard/BottomRow` |
+| Stock card change info | `StockCard/ChangeInfo` |
 | Stock ticker row | `StockRow` |
 | CIO chat bubble (AI) | `ChatBubble/AI` |
 | CIO chat bubble (user) | `ChatBubble/User` |
